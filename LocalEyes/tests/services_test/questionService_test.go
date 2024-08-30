@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"localEyes/internal/models"
 	"localEyes/internal/services"
-	"localEyes/mocks"
+	"localEyes/tests/mocks"
 	"testing"
 )
 
@@ -22,14 +22,7 @@ import (
 //	userID := primitive.NewObjectID()
 //	postID := primitive.NewObjectID()
 //	content := "Question content"
-//	question := &models.Question{
-//		QId:       primitive.NewObjectID(),
-//		PostId:    postID,
-//		UserId:    userID,
-//		Text:      content,
-//		Replies:   make([]string, 0),
-//		CreatedAt: time.Now(),
-//	}
+//	question := &models.Question{}
 //
 //	mockQuestionRepo.EXPECT().
 //		Create(question).

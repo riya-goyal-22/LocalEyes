@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"localEyes/internal/models"
 	"localEyes/internal/services"
-	"localEyes/mocks"
+	"localEyes/tests/mocks"
 	"testing"
 )
 

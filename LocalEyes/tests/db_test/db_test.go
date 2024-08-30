@@ -1,3 +1,4 @@
+// build+ !test
 package db_test
 
 import (
@@ -7,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"localEyes/internal/db"
-	"localEyes/mocks"
+	"localEyes/tests/mocks"
 	"testing"
 )
 

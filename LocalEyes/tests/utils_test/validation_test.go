@@ -5,7 +5,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/mongo"
 	"localEyes/internal/models"
-	"localEyes/mocks"
+	"localEyes/tests/mocks"
 	"localEyes/utils"
 	"testing"
 )

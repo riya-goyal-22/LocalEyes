@@ -2,6 +2,7 @@ package repositories_test
 
 import (
 	"context"
+	"localEyes/tests/mocks"
 	"testing"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"localEyes/internal/models"
 	"localEyes/internal/repositories"
-	"localEyes/mocks"
 )
 
 func TestMongoQuestionRepository_Create(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	"localEyes/constants"
 	"localEyes/internal/models"
 	"localEyes/internal/services"
-	"localEyes/mocks"
+	"localEyes/tests/mocks"
 	"testing"
 )
 
@@ -147,4 +147,45 @@ func TestUserService_DeActivate(t *testing.T) {
 	err := userService.DeActivate(userID)
 
 	assert.NoError(t, err)
+}
+
+func TestNotifyUsers(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockUserRepository(ctrl)
+	userService := services.UserService{Repo: mockRepo}
+
+	// Test data
+	userID := primitive.NewObjectID()
+	title := "Test Title"
+
+	// Expected behavior
+	mockRepo.EXPECT().PushNotification(userID, title).Return(nil)
+
+	// Call the method
+	err := userService.NotifyUsers(userID, title)
+	if err != nil {
+		t.Fatalf("expected no error, but got: %v", err)
+	}
+}
+
+func TestUnNotifyUsers(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockUserRepository(ctrl)
+	userService := services.UserService{Repo: mockRepo}
+
+	// Test data
+	userID := primitive.NewObjectID()
+
+	// Expected behavior
+	mockRepo.EXPECT().ClearNotification(userID).Return(nil)
+
+	// Call the method
+	err := userService.UnNotifyUsers(userID)
+	if err != nil {
+		t.Fatalf("expected no error, but got: %v", err)
+	}
 }

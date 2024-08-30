@@ -129,3 +129,4 @@ func (mr *MockCollectionInterfaceMockRecorder) UpdateFields(ctx, filter, updates
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFields", reflect.TypeOf((*MockCollectionInterface)(nil).UpdateFields), ctx, filter, updates)
 }
+

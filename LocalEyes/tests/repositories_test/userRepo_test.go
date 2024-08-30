@@ -2,6 +2,7 @@ package repositories_test
 
 import (
 	"context"
+	"localEyes/tests/mocks"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -11,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"localEyes/internal/models"
 	"localEyes/internal/repositories"
-	"localEyes/mocks" // Adjust import path if needed
 )
 
 func TestMongoUserRepository_Create(t *testing.T) {
@@ -68,5 +68,40 @@ func TestMongoUserRepository_UpdateActiveStatus(t *testing.T) {
 		Return(&mongo.UpdateResult{}, nil)
 
 	err := userRepo.UpdateActiveStatus(userId, status)
+	assert.NoError(t, err)
+}
+
+func TestMongoUserRepository_PushNotification(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockCollection := mocks.NewMockCollectionInterface(ctrl)
+	userRepo := &repositories.MongoUserRepository{Collection: mockCollection}
+
+	userId := primitive.NewObjectID()
+	title := "sample title"
+
+	mockCollection.EXPECT().
+		UpdateFields(context.Background(), bson.M{"id": bson.M{"$ne": userId}}, bson.M{"$push": bson.M{"notification": "New post :" + title}}).
+		Return(&mongo.UpdateResult{}, nil)
+
+	err := userRepo.PushNotification(userId, title)
+	assert.NoError(t, err)
+}
+
+func TestMongoUserRepository_ClearNotification(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockCollection := mocks.NewMockCollectionInterface(ctrl)
+	userRepo := &repositories.MongoUserRepository{Collection: mockCollection}
+
+	userId := primitive.NewObjectID()
+
+	mockCollection.EXPECT().
+		UpdateFields(context.Background(), bson.M{"id": userId}, bson.M{"$set": bson.M{"notification": []string{}}}).
+		Return(&mongo.UpdateResult{}, nil)
+
+	err := userRepo.ClearNotification(userId)
 	assert.NoError(t, err)
 }

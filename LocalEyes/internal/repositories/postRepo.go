@@ -90,7 +90,6 @@ func (r *MongoPostRepository) GetPostsByFilter(filter interface{}) ([]*models.Po
 	if err := cursor.Err(); err != nil {
 		return nil, err
 	}
-
 	return posts, nil
 }
 

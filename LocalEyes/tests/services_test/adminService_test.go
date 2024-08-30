@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"localEyes/internal/models"
 	"localEyes/internal/services"
-	"localEyes/mocks"
+	mocks2 "localEyes/tests/mocks"
 	"testing"
 )
 
@@ -16,7 +16,7 @@ func TestAdminService_Login(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockUserRepo := mocks.NewMockUserRepository(ctrl)
+	mockUserRepo := mocks2.NewMockUserRepository(ctrl)
 	adminService := services.NewAdminService(mockUserRepo, nil, nil)
 
 	username := "admin"
@@ -43,7 +43,7 @@ func TestAdminService_Login_Failure(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockUserRepo := mocks.NewMockUserRepository(ctrl)
+	mockUserRepo := mocks2.NewMockUserRepository(ctrl)
 	adminService := services.NewAdminService(mockUserRepo, nil, nil)
 
 	username := "admin"
@@ -65,7 +65,7 @@ func TestAdminService_GetAllUsers(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockUserRepo := mocks.NewMockUserRepository(ctrl)
+	mockUserRepo := mocks2.NewMockUserRepository(ctrl)
 	adminService := services.NewAdminService(mockUserRepo, nil, nil)
 
 	expectedUsers := []*models.User{
@@ -89,7 +89,7 @@ func TestAdminService_GetAllUsers_Failure(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockUserRepo := mocks.NewMockUserRepository(ctrl)
+	mockUserRepo := mocks2.NewMockUserRepository(ctrl)
 	adminService := services.NewAdminService(mockUserRepo, nil, nil)
 
 	mockUserRepo.EXPECT().
@@ -107,8 +107,8 @@ func TestAdminService_DeleteUser(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockUserRepo := mocks.NewMockUserRepository(ctrl)
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
+	mockUserRepo := mocks2.NewMockUserRepository(ctrl)
+	mockPostRepo := mocks2.NewMockPostRepository(ctrl)
 	adminService := services.NewAdminService(mockUserRepo, mockPostRepo, nil)
 
 	userID := primitive.NewObjectID()
@@ -130,8 +130,8 @@ func TestAdminService_DeleteUser_Failure(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockUserRepo := mocks.NewMockUserRepository(ctrl)
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
+	mockUserRepo := mocks2.NewMockUserRepository(ctrl)
+	mockPostRepo := mocks2.NewMockPostRepository(ctrl)
 	adminService := services.NewAdminService(mockUserRepo, mockPostRepo, nil)
 
 	userID := primitive.NewObjectID()
@@ -154,7 +154,7 @@ func TestAdminService_ReActivate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockUserRepo := mocks.NewMockUserRepository(ctrl)
+	mockUserRepo := mocks2.NewMockUserRepository(ctrl)
 	adminService := services.NewAdminService(mockUserRepo, nil, nil)
 
 	userID := primitive.NewObjectID()
@@ -173,7 +173,7 @@ func TestAdminService_ReActivate_Failure(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockUserRepo := mocks.NewMockUserRepository(ctrl)
+	mockUserRepo := mocks2.NewMockUserRepository(ctrl)
 	adminService := services.NewAdminService(mockUserRepo, nil, nil)
 
 	userID := primitive.NewObjectID()
@@ -193,7 +193,7 @@ func TestAdminService_GetAllQuestions(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockQuestionRepo := mocks.NewMockQuestionRepository(ctrl)
+	mockQuestionRepo := mocks2.NewMockQuestionRepository(ctrl)
 	adminService := services.NewAdminService(nil, nil, mockQuestionRepo)
 
 	expectedQuestions := []*models.Question{
@@ -214,7 +214,7 @@ func TestAdminService_GetAllQuestions_Failure(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockQuestionRepo := mocks.NewMockQuestionRepository(ctrl)
+	mockQuestionRepo := mocks2.NewMockQuestionRepository(ctrl)
 	adminService := services.NewAdminService(nil, nil, mockQuestionRepo)
 
 	mockQuestionRepo.EXPECT().
@@ -232,7 +232,7 @@ func TestAdminService_DeleteQuestion(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockQuestionRepo := mocks.NewMockQuestionRepository(ctrl)
+	mockQuestionRepo := mocks2.NewMockQuestionRepository(ctrl)
 	adminService := services.NewAdminService(nil, nil, mockQuestionRepo)
 
 	questionID := primitive.NewObjectID()
@@ -251,7 +251,7 @@ func TestAdminService_DeleteQuestion_Failure(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockQuestionRepo := mocks.NewMockQuestionRepository(ctrl)
+	mockQuestionRepo := mocks2.NewMockQuestionRepository(ctrl)
 	adminService := services.NewAdminService(nil, nil, mockQuestionRepo)
 
 	questionID := primitive.NewObjectID()
@@ -271,8 +271,8 @@ func TestAdminService_DeletePost(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
-	mockQuesRepo := mocks.NewMockQuestionRepository(ctrl)
+	mockPostRepo := mocks2.NewMockPostRepository(ctrl)
+	mockQuesRepo := mocks2.NewMockQuestionRepository(ctrl)
 	adminService := services.NewAdminService(nil, mockPostRepo, mockQuesRepo)
 
 	postID := primitive.NewObjectID()
@@ -294,8 +294,8 @@ func TestAdminService_DeletePost_Failure(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
-	mockQuesRepo := mocks.NewMockQuestionRepository(ctrl)
+	mockPostRepo := mocks2.NewMockPostRepository(ctrl)
+	mockQuesRepo := mocks2.NewMockQuestionRepository(ctrl)
 	adminService := services.NewAdminService(nil, mockPostRepo, mockQuesRepo)
 
 	postID := primitive.NewObjectID()
@@ -318,7 +318,7 @@ func TestAdminService_GetAllPosts(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
+	mockPostRepo := mocks2.NewMockPostRepository(ctrl)
 	adminService := services.NewAdminService(nil, mockPostRepo, nil)
 
 	expectedPosts := []*models.Post{ /* initialize with test data */ }
@@ -337,7 +337,7 @@ func TestAdminService_GetAllPosts_Failure(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
+	mockPostRepo := mocks2.NewMockPostRepository(ctrl)
 	adminService := services.NewAdminService(nil, mockPostRepo, nil)
 
 	mockPostRepo.EXPECT().
