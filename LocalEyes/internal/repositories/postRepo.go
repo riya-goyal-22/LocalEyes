@@ -7,29 +7,30 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"localEyes/db"
+	"localEyes/internal/db"
+	"localEyes/internal/interfaces"
 	"localEyes/internal/models"
 )
 
 type MongoPostRepository struct {
-	collection db.CollectionInterface
+	Collection interfaces.CollectionInterface
 }
 
-func NewMongoPostRepository() PostRepository {
+func NewMongoPostRepository() interfaces.PostRepository {
 	return &MongoPostRepository{
-		collection: db.NewCollectionWrapper(db.GetPostsCollection()),
+		Collection: db.NewCollectionWrapper(&db.MongoCollectionWrapper{Collection: db.GetPostsCollection()}),
 	}
 }
 
 func (r *MongoPostRepository) Create(post *models.Post) error {
-	_, err := r.collection.InsertOne(context.Background(), post)
+	_, err := r.Collection.InsertOne(context.Background(), post)
 	return err
 }
 
 func (r *MongoPostRepository) GetAllPosts() ([]*models.Post, error) {
 	var posts []*models.Post
 
-	cursor, err := r.collection.Find(context.Background(), bson.M{}, options.Find())
+	cursor, err := r.Collection.Find(context.Background(), bson.M{}, options.Find())
 	if err != nil {
 		return nil, err
 	}
@@ -56,17 +57,17 @@ func (r *MongoPostRepository) GetAllPosts() ([]*models.Post, error) {
 }
 
 func (r *MongoPostRepository) DeleteOneDoc(filter interface{}) error {
-	_, err := r.collection.DeleteOne(context.Background(), filter)
+	_, err := r.Collection.DeleteOne(context.Background(), filter)
 	return err
 }
 
 func (r *MongoPostRepository) DeleteByUId(UId primitive.ObjectID) error {
-	_, err := r.collection.DeleteMany(context.Background(), bson.M{"userId": UId})
+	_, err := r.Collection.DeleteMany(context.Background(), bson.M{"userId": UId})
 	return err
 }
 
 func (r *MongoPostRepository) GetPostsByFilter(filter interface{}) ([]*models.Post, error) {
-	cursor, err := r.collection.Find(context.Background(), filter)
+	cursor, err := r.Collection.Find(context.Background(), filter)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +101,7 @@ func (r *MongoPostRepository) UpdateUserPost(PId, UId primitive.ObjectID, title 
 		"content": content,
 	}
 	update := bson.M{"$set": updates}
-	_, err := r.collection.UpdateFields(context.Background(), filter, update)
+	_, err := r.Collection.UpdateFields(context.Background(), filter, update)
 	return err
 }
 
@@ -110,6 +111,6 @@ func (r *MongoPostRepository) UpdateLike(PId primitive.ObjectID) error {
 		"likes": 1,
 	}
 	update := bson.M{"$inc": updates}
-	_, err := r.collection.UpdateFields(context.Background(), filter, update)
+	_, err := r.Collection.UpdateFields(context.Background(), filter, update)
 	return err
 }

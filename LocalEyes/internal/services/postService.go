@@ -3,16 +3,16 @@ package services
 import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"localEyes/internal/interfaces"
 	"localEyes/internal/models"
-	"localEyes/internal/repositories"
 	"time"
 )
 
 type PostService struct {
-	repo repositories.PostRepository
+	repo interfaces.PostRepository
 }
 
-func NewPostService(repo repositories.PostRepository) *PostService {
+func NewPostService(repo interfaces.PostRepository) *PostService {
 	return &PostService{repo: repo}
 }
 
@@ -26,7 +26,8 @@ func (s *PostService) CreatePost(userId primitive.ObjectID, title, content, post
 		CreatedAt: time.Now(),
 		Likes:     0,
 	}
-	return s.repo.Create(post)
+	err := s.repo.Create(post)
+	return err
 }
 
 func (s *PostService) UpdateMyPost(postId, userId primitive.ObjectID, title, content string) error {

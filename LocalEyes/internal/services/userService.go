@@ -6,20 +6,20 @@ import (
 	"errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"localEyes/constants"
+	"localEyes/internal/interfaces"
 	"localEyes/internal/models"
-	"localEyes/internal/repositories"
 )
 
 type UserService struct {
-	Repo repositories.UserRepository
+	Repo interfaces.UserRepository
 }
 
-func NewUserService(repo repositories.UserRepository) *UserService {
+func NewUserService(repo interfaces.UserRepository) *UserService {
 	return &UserService{Repo: repo}
 }
 
 func (s *UserService) Signup(username, password string, dwellingAge int, tag string) error {
-	hashedPassword := hashPassword(password)
+	hashedPassword := HashPassword(password)
 
 	user := &models.User{
 		UId:          primitive.NewObjectID(),
@@ -34,19 +34,20 @@ func (s *UserService) Signup(username, password string, dwellingAge int, tag str
 		//IsAdmin:       false,
 	}
 
-	return s.Repo.Create(user)
+	err := s.Repo.Create(user)
+	return err
 }
 
 func (s *UserService) Login(Username, password string) (*models.User, error) {
-	hashedPassword := hashPassword(password)
+	hashedPassword := HashPassword(password)
 	user, err := s.Repo.FindByUsernamePassword(Username, hashedPassword)
-	user.NotifyChannel = make(chan string, 5)
+	//user.NotifyChannel = make(chan string, 5)
 	if err != nil {
-		return nil, errors.New(constants.Red + "Invalid username or password" + constants.Reset)
-	}
-
-	if !user.IsActive {
-		return nil, errors.New(constants.Red + "Account is Inactive" + constants.Reset)
+		return nil, errors.New(constants.Red + "Invalid Account credentials" + constants.Reset)
+	} else if user == nil {
+		return nil, errors.New(constants.Red + "Invalid Account credentials" + constants.Reset)
+	} else if user.IsActive == false {
+		return nil, errors.New(constants.Red + "InActive Account" + constants.Reset)
 	}
 	return user, nil
 }
@@ -59,8 +60,16 @@ func (s *UserService) DeActivate(UId primitive.ObjectID) error {
 	return nil
 }
 
-func hashPassword(password string) string {
+func HashPassword(password string) string {
 	hash := sha256.New()
 	hash.Write([]byte(password))
 	return hex.EncodeToString(hash.Sum(nil))
+}
+
+func (s *UserService) NotifyUsers(UId primitive.ObjectID, title string) error {
+	return s.Repo.PushNotification(UId, title)
+}
+
+func (s *UserService) UnNotifyUsers(UId primitive.ObjectID) error {
+	return s.Repo.ClearNotification(UId)
 }

@@ -5,22 +5,22 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"localEyes/constants"
+	"localEyes/internal/interfaces"
 	"localEyes/internal/models"
-	"localEyes/internal/repositories"
 )
 
 type AdminService struct {
-	UserRepo repositories.UserRepository
-	PostRepo repositories.PostRepository
-	QuesRepo repositories.QuestionRepository
+	UserRepo interfaces.UserRepository
+	PostRepo interfaces.PostRepository
+	QuesRepo interfaces.QuestionRepository
 }
 
-func NewAdminService(userRepo repositories.UserRepository, postRepo repositories.PostRepository, quesRepo repositories.QuestionRepository) *AdminService {
+func NewAdminService(userRepo interfaces.UserRepository, postRepo interfaces.PostRepository, quesRepo interfaces.QuestionRepository) *AdminService {
 	return &AdminService{UserRepo: userRepo, PostRepo: postRepo, QuesRepo: quesRepo}
 }
 
 func (s *AdminService) Login(password string) (*models.Admin, error) {
-	hashedPassword := hashPassword(password)
+	hashedPassword := HashPassword(password)
 	user, err := s.UserRepo.FindAdminByUsernamePassword("admin", hashedPassword)
 	if err != nil {
 		return nil, errors.New(constants.Red + "Invalid username or password" + constants.Reset)
@@ -53,25 +53,26 @@ func (s *AdminService) GetAllQuestions() ([]*models.Question, error) {
 }
 
 func (s *AdminService) DeleteUser(UId primitive.ObjectID) error {
-	err := s.UserRepo.DeleteByUId(UId)
-	if err != nil {
-		return err
-	}
-	err = s.PostRepo.DeleteByUId(UId)
-	if err != nil {
-		return err
+	err1 := s.UserRepo.DeleteByUId(UId)
+	//if err != nil {
+	//	return err
+	//}
+	err2 := s.PostRepo.DeleteByUId(UId)
+	if err1 != nil {
+		return err1
+	} else if err2 != nil {
+		return err2
 	}
 	return nil
 }
 
 func (s *AdminService) DeletePost(PId primitive.ObjectID) error {
-	err := s.PostRepo.DeleteOneDoc(bson.M{"id": PId})
-	if err != nil {
-		return err
-	}
-	err = s.QuesRepo.DeleteByPId(PId)
-	if err != nil {
-		return err
+	err1 := s.PostRepo.DeleteOneDoc(bson.M{"id": PId})
+	err2 := s.QuesRepo.DeleteByPId(PId)
+	if err1 != nil {
+		return err1
+	} else if err2 != nil {
+		return err2
 	}
 	return nil
 }

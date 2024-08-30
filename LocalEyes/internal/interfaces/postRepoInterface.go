@@ -1,4 +1,4 @@
-package repositories
+package interfaces
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"

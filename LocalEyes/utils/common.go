@@ -3,7 +3,6 @@ package utils
 import (
 	"bufio"
 	"fmt"
-	"github.com/manifoldco/promptui"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"localEyes/constants"
 	"os"
@@ -24,10 +23,10 @@ func PromptInput(prompt string) string {
 	input := scanner.Text()
 
 	// Check for any errors during scanning
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Error reading input:", err)
-		return ""
-	}
+	//if err := scanner.Err(); err != nil {
+	//	fmt.Println("Error reading input:", err)
+	//	return ""
+	//}
 	return input
 }
 
@@ -37,20 +36,6 @@ func GetChoice() int {
 	fmt.Scanln(&choice)
 	fmt.Println()
 	return choice
-}
-
-func PromptPassword(prompt string) string {
-	prompt1 := promptui.Prompt{
-		Label:     prompt,
-		Mask:      '*',
-		IsConfirm: false,
-	}
-	result, err := prompt1.Run()
-	if err != nil {
-		fmt.Println("Prompt failed:", err)
-		return ""
-	}
-	return result
 }
 
 func PromptID(prompt string) (primitive.ObjectID, error) {

@@ -3,16 +3,16 @@ package services
 import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"localEyes/internal/interfaces"
 	"localEyes/internal/models"
-	"localEyes/internal/repositories"
 	"time"
 )
 
 type QuestionService struct {
-	repo repositories.QuestionRepository
+	repo interfaces.QuestionRepository
 }
 
-func NewQuestionService(repo repositories.QuestionRepository) *QuestionService {
+func NewQuestionService(repo interfaces.QuestionRepository) *QuestionService {
 	return &QuestionService{repo: repo}
 }
 

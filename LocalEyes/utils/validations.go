@@ -2,15 +2,12 @@ package utils
 
 import (
 	"errors"
-	"fmt"
 	"go.mongodb.org/mongo-driver/mongo"
-	"localEyes/constants"
-	"localEyes/internal/repositories"
-	"localEyes/internal/services"
+	"localEyes/internal/interfaces"
 	"strings"
 )
 
-func ValidateUsername(username string, userRepo repositories.UserRepository) bool {
+func ValidateUsername(username string, userRepo interfaces.UserRepository) bool {
 	_, err := userRepo.FindByUsername(username)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return true
@@ -25,20 +22,10 @@ func ValidatePassword(password string) bool {
 				return true
 			}
 		}
-	} else {
-		fmt.Println(constants.Red + "Password is not strong" + constants.Reset)
 	}
 	return false
 }
 
 func ValidateFilter(filter string) bool {
 	return filter == "food" || filter == "travel" || filter == "shopping" || filter == "other"
-}
-
-func CheckPasswordHash(username string, password string, userService *services.UserService) bool {
-	_, err := userService.Repo.FindByUsernamePassword(username, password)
-	if errors.Is(err, mongo.ErrNoDocuments) {
-		return false
-	}
-	return true
 }

@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"localEyes/constants"
+	"localEyes/internal/interfaces"
 	"log"
 	"sync"
 )
@@ -14,47 +15,36 @@ var (
 	once        sync.Once
 )
 
-type CollectionInterface interface {
-	InsertOne(ctx context.Context, document interface{}) (*mongo.InsertOneResult, error)
-	FindOne(ctx context.Context, filter interface{}) *mongo.SingleResult
-	Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (*mongo.Cursor, error)
-	DeleteOne(ctx context.Context, filter interface{}) (*mongo.DeleteResult, error)
-	DeleteMany(ctx context.Context, filter interface{}) (*mongo.DeleteResult, error)
-	UpdateFields(ctx context.Context, filter interface{}, updates interface{}) (*mongo.UpdateResult, error)
-}
-
 type MongoCollectionWrapper struct {
-	collection *mongo.Collection
+	Collection *mongo.Collection
 }
 
-func NewCollectionWrapper(collection *mongo.Collection) CollectionInterface {
-	return &MongoCollectionWrapper{
-		collection: collection,
-	}
+func NewCollectionWrapper(collectionInterface interfaces.CollectionInterface) interfaces.CollectionInterface {
+	return collectionInterface
 }
 
 func (w *MongoCollectionWrapper) InsertOne(ctx context.Context, document interface{}) (*mongo.InsertOneResult, error) {
-	return w.collection.InsertOne(ctx, document)
+	return w.Collection.InsertOne(ctx, document)
 }
 
 func (w *MongoCollectionWrapper) FindOne(ctx context.Context, filter interface{}) *mongo.SingleResult {
-	return w.collection.FindOne(ctx, filter)
+	return w.Collection.FindOne(ctx, filter)
 }
 
 func (w *MongoCollectionWrapper) Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (*mongo.Cursor, error) {
-	return w.collection.Find(ctx, filter, opts...)
+	return w.Collection.Find(ctx, filter, opts...)
 }
 
 func (w *MongoCollectionWrapper) DeleteOne(ctx context.Context, filter interface{}) (*mongo.DeleteResult, error) {
-	return w.collection.DeleteOne(ctx, filter)
+	return w.Collection.DeleteOne(ctx, filter)
 }
 
 func (w *MongoCollectionWrapper) DeleteMany(ctx context.Context, filter interface{}) (*mongo.DeleteResult, error) {
-	return w.collection.DeleteMany(ctx, filter)
+	return w.Collection.DeleteMany(ctx, filter)
 }
 
 func (w *MongoCollectionWrapper) UpdateFields(ctx context.Context, filter interface{}, updates interface{}) (*mongo.UpdateResult, error) {
-	return w.collection.UpdateOne(ctx, filter, updates)
+	return w.Collection.UpdateMany(ctx, filter, updates)
 }
 
 func GetMongoClient() *mongo.Client {
@@ -72,9 +62,9 @@ func GetMongoClient() *mongo.Client {
 
 		mongoClient = client
 	})
-
 	return mongoClient
 }
+
 func GetCollection(database, collection string) *mongo.Collection {
 	return GetMongoClient().Database(database).Collection(collection)
 }

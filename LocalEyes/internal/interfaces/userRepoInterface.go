@@ -1,4 +1,4 @@
-package repositories
+package interfaces
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,4 +14,6 @@ type UserRepository interface {
 	GetAllUsers() ([]*models.User, error)
 	DeleteByUId(UId primitive.ObjectID) error
 	UpdateActiveStatus(UId primitive.ObjectID, status bool) error
+	ClearNotification(UId primitive.ObjectID) error
+	PushNotification(UId primitive.ObjectID, title string) error
 }

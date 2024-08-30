@@ -7,29 +7,30 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"localEyes/db"
+	"localEyes/internal/db"
+	"localEyes/internal/interfaces"
 	"localEyes/internal/models"
 )
 
 type MongoQuestionRepository struct {
-	collection db.CollectionInterface
+	Collection interfaces.CollectionInterface
 }
 
-func NewMongoQuestionRepository() QuestionRepository {
+func NewMongoQuestionRepository() interfaces.QuestionRepository {
 	return &MongoQuestionRepository{
-		collection: db.NewCollectionWrapper(db.GetQuestionsCollection()),
+		Collection: db.NewCollectionWrapper(&db.MongoCollectionWrapper{Collection: db.GetQuestionsCollection()}),
 	}
 }
 
 func (r *MongoQuestionRepository) Create(question *models.Question) error {
-	_, err := r.collection.InsertOne(context.Background(), question)
+	_, err := r.Collection.InsertOne(context.Background(), question)
 	return err
 }
 
 func (r *MongoQuestionRepository) GetAllQuestions() ([]*models.Question, error) {
 	var questions []*models.Question
 
-	cursor, err := r.collection.Find(context.Background(), bson.M{}, options.Find())
+	cursor, err := r.Collection.Find(context.Background(), bson.M{}, options.Find())
 	if err != nil {
 		return nil, err
 	}
@@ -56,19 +57,19 @@ func (r *MongoQuestionRepository) GetAllQuestions() ([]*models.Question, error) 
 }
 
 func (r *MongoQuestionRepository) DeleteOneDoc(filter interface{}) error {
-	_, err := r.collection.DeleteOne(context.Background(), filter)
+	_, err := r.Collection.DeleteOne(context.Background(), filter)
 	return err
 }
 
 func (r *MongoQuestionRepository) DeleteByPId(PId primitive.ObjectID) error {
-	_, err := r.collection.DeleteMany(context.Background(), bson.M{"post_id": PId})
+	_, err := r.Collection.DeleteMany(context.Background(), bson.M{"post_id": PId})
 	return err
 }
 
 func (r *MongoQuestionRepository) GetQuestionsByPId(PId primitive.ObjectID) ([]*models.Question, error) {
 	var questions []*models.Question
 
-	cursor, err := r.collection.Find(context.Background(), bson.M{"post_id": PId}, options.Find())
+	cursor, err := r.Collection.Find(context.Background(), bson.M{"post_id": PId}, options.Find())
 	if err != nil {
 		return nil, err
 	}
@@ -100,6 +101,6 @@ func (r *MongoQuestionRepository) UpdateQuestion(QId primitive.ObjectID, answer 
 		"replies": answer,
 	}
 	update := bson.M{"$push": updates}
-	_, err := r.collection.UpdateFields(context.Background(), filter, update)
+	_, err := r.Collection.UpdateFields(context.Background(), filter, update)
 	return err
 }
