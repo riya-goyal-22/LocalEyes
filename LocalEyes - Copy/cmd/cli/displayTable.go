@@ -17,7 +17,7 @@ func displayUsers(users []*models.User) {
 
 	// Add rows to the table, only including Name and City
 	for _, user := range users {
-		UIdStr := user.UId.Hex()
+		UIdStr := strconv.Itoa(user.UId)
 		Dwelling := strconv.Itoa(user.DwellingAge)
 		activeStatus := "No"
 		if user.IsActive {
@@ -36,7 +36,7 @@ func displayPosts(posts []*models.Post) {
 
 	// Add rows to the table, only including Name and City
 	for _, post := range posts {
-		PIdStr := post.PostId.Hex()
+		PIdStr := strconv.Itoa(post.PostId)
 		Likes := strconv.Itoa(post.Likes)
 		Time := post.CreatedAt.Format("2006-01-02 15:04:05")
 		table.Append([]string{PIdStr, post.Title, post.Type, post.Content, Likes, Time})
@@ -52,7 +52,7 @@ func displayQuestions(questions []*models.Question) {
 
 	// Add rows to the table, only including Name and City
 	for _, question := range questions {
-		QIdStr := question.QId.Hex()
+		QIdStr := strconv.Itoa(question.QId)
 		Time := question.CreatedAt.Format("2006-01-02 15:04:05")
 		Replies := strings.Join(question.Replies, ", ")
 		table.Append([]string{QIdStr, question.Text, Replies, Time})

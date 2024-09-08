@@ -2,8 +2,6 @@ package services
 
 import (
 	"errors"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"localEyes/constants"
 	"localEyes/internal/interfaces"
 	"localEyes/internal/models"
@@ -52,11 +50,8 @@ func (s *AdminService) GetAllQuestions() ([]*models.Question, error) {
 	return questions, nil
 }
 
-func (s *AdminService) DeleteUser(UId primitive.ObjectID) error {
+func (s *AdminService) DeleteUser(UId int) error {
 	err1 := s.UserRepo.DeleteByUId(UId)
-	//if err != nil {
-	//	return err
-	//}
 	err2 := s.PostRepo.DeleteByUId(UId)
 	if err1 != nil {
 		return err1
@@ -66,8 +61,8 @@ func (s *AdminService) DeleteUser(UId primitive.ObjectID) error {
 	return nil
 }
 
-func (s *AdminService) DeletePost(PId primitive.ObjectID) error {
-	err1 := s.PostRepo.DeleteOneDoc(bson.M{"id": PId})
+func (s *AdminService) DeletePost(PId int) error {
+	err1 := s.PostRepo.DeleteByPId(PId)
 	err2 := s.QuesRepo.DeleteByPId(PId)
 	if err1 != nil {
 		return err1
@@ -77,15 +72,15 @@ func (s *AdminService) DeletePost(PId primitive.ObjectID) error {
 	return nil
 }
 
-func (s *AdminService) DeleteQuestion(QId primitive.ObjectID) error {
-	err := s.QuesRepo.DeleteOneDoc(bson.M{"q_id": QId})
+func (s *AdminService) DeleteQuestion(QId int) error {
+	err := s.QuesRepo.DeleteByQId(QId)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *AdminService) ReActivate(UId primitive.ObjectID) error {
+func (s *AdminService) ReActivate(UId int) error {
 	err := s.UserRepo.UpdateActiveStatus(UId, true)
 	if err != nil {
 		return err

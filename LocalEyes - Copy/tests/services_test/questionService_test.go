@@ -2,133 +2,236 @@ package services_test
 
 import (
 	"errors"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"localEyes/internal/models"
 	"localEyes/internal/services"
 	"localEyes/tests/mocks"
 	"testing"
+	_ "time"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
 
-//func TestQuestionService_AskQuestion(t *testing.T) {
-//	ctrl := gomock.NewController(t)
-//	defer ctrl.Finish()
-//
-//	mockQuestionRepo := mocks.NewMockQuestionRepository(ctrl)
-//	questionService := services.NewQuestionService(mockQuestionRepo)
-//
-//	userID := primitive.NewObjectID()
-//	postID := primitive.NewObjectID()
-//	content := "Question content"
-//	question := &models.Question{}
-//
-//	mockQuestionRepo.EXPECT().
-//		Create(question).
-//		Return(nil)
-//
-//	err := questionService.AskQuestion(userID, postID, content)
-//
-//	assert.NoError(t, err)
-//}
+func TestQuestionService_AskQuestion(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockQuestionRepository(ctrl)
+	questionService := services.NewQuestionService(mockRepo)
+
+	tests := []struct {
+		name    string
+		userId  int
+		postId  int
+		content string
+		mockErr error
+		wantErr bool
+	}{
+		{
+			name:    "successful question creation",
+			userId:  1,
+			postId:  1,
+			content: "Is this place good?",
+			mockErr: nil,
+			wantErr: false,
+		},
+		{
+			name:    "repo returns error on create",
+			userId:  1,
+			postId:  1,
+			content: "Is this place good?",
+			mockErr: errors.New("DB error"),
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo.EXPECT().Create(gomock.Any()).Return(tt.mockErr)
+
+			err := questionService.AskQuestion(tt.userId, tt.postId, tt.content)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
 
 func TestQuestionService_DeleteQuesByPId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockQuestionRepo := mocks.NewMockQuestionRepository(ctrl)
-	questionService := services.NewQuestionService(mockQuestionRepo)
+	mockRepo := mocks.NewMockQuestionRepository(ctrl)
+	questionService := services.NewQuestionService(mockRepo)
 
-	postID := primitive.NewObjectID()
+	tests := []struct {
+		name    string
+		postId  int
+		mockErr error
+		wantErr bool
+	}{
+		{
+			name:    "successful deletion",
+			postId:  1,
+			mockErr: nil,
+			wantErr: false,
+		},
+		{
+			name:    "repo returns error on delete",
+			postId:  1,
+			mockErr: errors.New("DB error"),
+			wantErr: true,
+		},
+	}
 
-	mockQuestionRepo.EXPECT().
-		DeleteByPId(postID).
-		Return(nil)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo.EXPECT().DeleteByPId(tt.postId).Return(tt.mockErr)
 
-	err := questionService.DeleteQuesByPId(postID)
+			err := questionService.DeleteQuesByPId(tt.postId)
 
-	assert.NoError(t, err)
-}
-
-func TestQuestionService_DeleteUserQues(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockQuestionRepo := mocks.NewMockQuestionRepository(ctrl)
-	questionService := services.NewQuestionService(mockQuestionRepo)
-
-	userID := primitive.NewObjectID()
-	questionID := primitive.NewObjectID()
-
-	filter := bson.M{"q_id": questionID, "user_id": userID}
-	mockQuestionRepo.EXPECT().
-		DeleteOneDoc(filter).
-		Return(nil)
-
-	err := questionService.DeleteUserQues(userID, questionID)
-
-	assert.NoError(t, err)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestQuestionService_GetPostQuestions(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockQuestionRepo := mocks.NewMockQuestionRepository(ctrl)
-	questionService := services.NewQuestionService(mockQuestionRepo)
+	mockRepo := mocks.NewMockQuestionRepository(ctrl)
+	questionService := services.NewQuestionService(mockRepo)
 
-	postID := primitive.NewObjectID()
-	expectedQuestions := []*models.Question{
-		{QId: primitive.NewObjectID(), PostId: postID, Text: "Question 1"},
-		{QId: primitive.NewObjectID(), PostId: postID, Text: "Question 2"},
+	tests := []struct {
+		name       string
+		postId     int
+		mockResult []*models.Question
+		mockErr    error
+		wantErr    bool
+	}{
+		{
+			name:       "successful retrieval",
+			postId:     1,
+			mockResult: []*models.Question{{PostId: 1, Text: "Question 1"}},
+			mockErr:    nil,
+			wantErr:    false,
+		},
+		{
+			name:       "repo returns error",
+			postId:     1,
+			mockResult: nil,
+			mockErr:    errors.New("DB error"),
+			wantErr:    true,
+		},
 	}
 
-	mockQuestionRepo.EXPECT().
-		GetQuestionsByPId(postID).
-		Return(expectedQuestions, nil)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo.EXPECT().GetQuestionsByPId(tt.postId).Return(tt.mockResult, tt.mockErr)
 
-	questions, err := questionService.GetPostQuestions(postID)
+			result, err := questionService.GetPostQuestions(tt.postId)
 
-	assert.NoError(t, err)
-	assert.Equal(t, expectedQuestions, questions)
-}
-
-func TestQuestionService_GetPostQuestions_Failure(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockQuestionRepo := mocks.NewMockQuestionRepository(ctrl)
-	questionService := services.NewQuestionService(mockQuestionRepo)
-
-	postID := primitive.NewObjectID()
-
-	mockQuestionRepo.EXPECT().
-		GetQuestionsByPId(postID).
-		Return(nil, errors.New("fetch error"))
-
-	questions, err := questionService.GetPostQuestions(postID)
-
-	assert.Error(t, err)
-	assert.Nil(t, questions)
-	assert.Contains(t, err.Error(), "fetch error")
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.mockResult, result)
+			}
+		})
+	}
 }
 
 func TestQuestionService_AddAnswer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockQuestionRepo := mocks.NewMockQuestionRepository(ctrl)
-	questionService := services.NewQuestionService(mockQuestionRepo)
+	mockRepo := mocks.NewMockQuestionRepository(ctrl)
+	questionService := services.NewQuestionService(mockRepo)
 
-	questionID := primitive.NewObjectID()
-	answer := "This is an answer"
+	tests := []struct {
+		name    string
+		qId     int
+		answer  string
+		mockErr error
+		wantErr bool
+	}{
+		{
+			name:    "successful update",
+			qId:     1,
+			answer:  "Yes, it's great!",
+			mockErr: nil,
+			wantErr: false,
+		},
+		{
+			name:    "repo returns error on update",
+			qId:     1,
+			answer:  "Yes, it's great!",
+			mockErr: errors.New("DB error"),
+			wantErr: true,
+		},
+	}
 
-	mockQuestionRepo.EXPECT().
-		UpdateQuestion(questionID, answer).
-		Return(nil)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo.EXPECT().UpdateQuestion(tt.qId, tt.answer).Return(tt.mockErr)
 
-	err := questionService.AddAnswer(questionID, answer)
+			err := questionService.AddAnswer(tt.qId, tt.answer)
 
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestDeleteUserQues_Success(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockQuestionRepository(ctrl)
+	service := services.NewQuestionService(mockRepo)
+
+	QId := 1
+	UId := 123
+
+	// Setup expectations
+	mockRepo.EXPECT().DeleteByQIdUId(QId, UId).Return(nil)
+
+	// Call the service method
+	err := service.DeleteUserQues(UId, QId)
+
+	// Assert that there was no error
 	assert.NoError(t, err)
+}
+
+func TestDeleteUserQues_Error(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockQuestionRepository(ctrl)
+	service := services.NewQuestionService(mockRepo)
+
+	QId := 1
+	UId := 123
+	expectedError := errors.New("error deleting question")
+
+	// Setup expectations
+	mockRepo.EXPECT().DeleteByQIdUId(QId, UId).Return(expectedError)
+
+	// Call the service method
+	err := service.DeleteUserQues(UId, QId)
+
+	// Assert that the expected error is returned
+	assert.Error(t, err)
+	assert.Equal(t, expectedError, err)
 }

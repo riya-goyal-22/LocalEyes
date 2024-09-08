@@ -1,8 +1,6 @@
 package services
 
 import (
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"localEyes/internal/interfaces"
 	"localEyes/internal/models"
 	"time"
@@ -16,9 +14,8 @@ func NewQuestionService(repo interfaces.QuestionRepository) *QuestionService {
 	return &QuestionService{repo: repo}
 }
 
-func (s *QuestionService) AskQuestion(userId, postId primitive.ObjectID, content string) error {
+func (s *QuestionService) AskQuestion(userId, postId int, content string) error {
 	question := &models.Question{
-		QId:       primitive.NewObjectID(),
 		PostId:    postId,
 		UserId:    userId,
 		Text:      content,
@@ -28,7 +25,7 @@ func (s *QuestionService) AskQuestion(userId, postId primitive.ObjectID, content
 	return s.repo.Create(question)
 }
 
-func (s *QuestionService) DeleteQuesByPId(postId primitive.ObjectID) error {
+func (s *QuestionService) DeleteQuesByPId(postId int) error {
 	err := s.repo.DeleteByPId(postId)
 	if err != nil {
 		return err
@@ -36,15 +33,15 @@ func (s *QuestionService) DeleteQuesByPId(postId primitive.ObjectID) error {
 	return nil
 }
 
-func (s *QuestionService) DeleteUserQues(UId, QId primitive.ObjectID) error {
-	err := s.repo.DeleteOneDoc(bson.M{"q_id": QId, "user_id": UId})
+func (s *QuestionService) DeleteUserQues(UId, QId int) error {
+	err := s.repo.DeleteByQIdUId(QId, UId)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *QuestionService) GetPostQuestions(PId primitive.ObjectID) ([]*models.Question, error) {
+func (s *QuestionService) GetPostQuestions(PId int) ([]*models.Question, error) {
 	questions, err := s.repo.GetQuestionsByPId(PId)
 	if err != nil {
 		return nil, err
@@ -52,7 +49,7 @@ func (s *QuestionService) GetPostQuestions(PId primitive.ObjectID) ([]*models.Qu
 	return questions, nil
 }
 
-func (s *QuestionService) AddAnswer(QId primitive.ObjectID, answer string) error {
+func (s *QuestionService) AddAnswer(QId int, answer string) error {
 	err := s.repo.UpdateQuestion(QId, answer)
 	if err != nil {
 		return err

@@ -5,13 +5,12 @@ package cli
 
 import (
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"localEyes/constants"
 	"localEyes/internal/services"
 	"localEyes/utils"
 )
 
-func openPost(questionService *services.QuestionService, postService *services.PostService, PId, UId primitive.ObjectID) {
+func openPost(questionService *services.QuestionService, postService *services.PostService, PId, UId int) {
 	boolVal, err := postService.PostIdExist(PId)
 	if err != nil {
 		fmt.Println(constants.Red + err.Error() + constants.Reset)
@@ -38,7 +37,7 @@ func openPost(questionService *services.QuestionService, postService *services.P
 				fmt.Println(constants.Green + "Question added" + constants.Reset)
 			}
 		case 2:
-			QId, err := utils.PromptID("Enter QId:")
+			QId, err := utils.PromptIntInput("Enter QId:")
 			answer := utils.PromptInput("Enter your answer:")
 			err = questionService.AddAnswer(QId, answer)
 			if err != nil {
@@ -60,7 +59,7 @@ func openPost(questionService *services.QuestionService, postService *services.P
 			} else {
 				displayQuestions(questions)
 			}
-			QId, err := utils.PromptID("Enter Question Id to delete:")
+			QId, err := utils.PromptIntInput("Enter Question Id to delete:")
 			err = questionService.DeleteUserQues(UId, QId)
 			if err != nil {
 				fmt.Println(constants.Red + "Error deleting question:" + err.Error() + constants.Reset)

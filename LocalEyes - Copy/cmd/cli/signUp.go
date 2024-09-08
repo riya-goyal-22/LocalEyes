@@ -6,6 +6,7 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"github.com/manifoldco/promptui"
 	"localEyes/constants"
 	"localEyes/internal/services"
 	"localEyes/utils"
@@ -28,7 +29,12 @@ func signUp(userService *services.UserService) {
 		}
 	}
 	for {
-		password = utils.PromptPassword(constants.Cyan + "Enter a strong password [6 characters long ,having special character and number]" + constants.Reset)
+		prompt := &promptui.Prompt{
+			Label:     constants.Cyan + "Enter a strong password [6 characters long ,having special character and number]" + constants.Reset,
+			Mask:      '*',
+			IsConfirm: false,
+		}
+		password = utils.PromptPassword(prompt)
 		if utils.ValidatePassword(password) {
 			break
 		} else {
@@ -47,7 +53,7 @@ func signUp(userService *services.UserService) {
 	}
 	err := userService.Signup(username, password, DwellingAge, tag)
 	if err != nil {
-		fmt.Println(constants.Red + "Error Signing Up\n" + constants.Reset)
+		fmt.Println(constants.Red + "Error Signing Up\n" + err.Error() + constants.Reset)
 		return
 	} else {
 		fmt.Println("\n" + constants.Green + "Successfully Signed Up!\n" + constants.Reset)

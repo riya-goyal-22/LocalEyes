@@ -2,8 +2,9 @@ package repositories
 
 import (
 	"database/sql"
-	"github.com/jmoiron/sqlx"
-	"localEyes/internal/db"
+	"encoding/json"
+	"errors"
+	"localEyes/constants"
 	"localEyes/internal/models"
 )
 
@@ -11,42 +12,49 @@ type MySQLUserRepository struct {
 	DB *sql.DB
 }
 
-func NewMySQLUserRepository() *MySQLUserRepository {
+func NewMySQLUserRepository(Db *sql.DB) *MySQLUserRepository {
 	return &MySQLUserRepository{
-		DB: db.GetSQLClient(),
+		DB: Db,
 	}
 }
 
 func (r *MySQLUserRepository) Create(user *models.User) error {
-	query := "INSERT INTO users (id, username, password, is_active, city, dwelling_age, tag, notification) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-	_, err := r.DB.Exec(query, user.UId, user.Username, user.Password, user.IsActive, user.City, user.DwellingAge, user.Tag, user.Notification)
+	notification, err := json.Marshal(user.Notification)
+	query := "INSERT INTO users (username, password, is_active, city, dwelling_age, tag, notification) VALUES (?, ?, ?, ?, ?, ?, ?)"
+	_, err = r.DB.Exec(query, user.Username, user.Password, user.IsActive, user.City, user.DwellingAge, user.Tag, notification)
 	return err
 }
 
-func (r *MySQLUserRepository) FindByUId(UId string) (*models.User, error) {
+func (r *MySQLUserRepository) FindByUId(UId int) (*models.User, error) {
 	var user models.User
 	query := "SELECT id, username, password, is_active, city, dwelling_age, tag, notification FROM users WHERE id = ?"
-	err := r.DB.QueryRow(query, UId).Scan(&user.UId, &user.Username, &user.Password, &user.IsActive, &user.City, &user.DwellingAge, &user.Tag, &user.Notification)
+	var notification []byte
+	err := r.DB.QueryRow(query, UId).Scan(&user.UId, &user.Username, &user.Password, &user.IsActive, &user.City, &user.DwellingAge, &user.Tag, &notification)
+	json.Unmarshal(notification, &user.Notification)
 	return &user, err
 }
 
 func (r *MySQLUserRepository) FindByUsername(username string) (*models.User, error) {
 	var user models.User
 	query := "SELECT id, username, password, is_active, city, dwelling_age, tag, notification FROM users WHERE username = ?"
-	err := r.DB.QueryRow(query, username).Scan(&user.UId, &user.Username, &user.Password, &user.IsActive, &user.City, &user.DwellingAge, &user.Tag, &user.Notification)
+	var notification []byte
+	err := r.DB.QueryRow(query, username).Scan(&user.UId, &user.Username, &user.Password, &user.IsActive, &user.City, &user.DwellingAge, &user.Tag, &notification)
+	json.Unmarshal(notification, &user.Notification)
 	return &user, err
 }
 
 func (r *MySQLUserRepository) FindByUsernamePassword(username, password string) (*models.User, error) {
 	var user models.User
 	query := "SELECT id, username, password, is_active, city, dwelling_age, tag, notification FROM users WHERE username = ? AND password = ?"
-	err := r.DB.QueryRow(query, username, password).Scan(&user.UId, &user.Username, &user.Password, &user.IsActive, &user.City, &user.DwellingAge, &user.Tag, &user.Notification)
+	var notification []byte
+	err := r.DB.QueryRow(query, username, password).Scan(&user.UId, &user.Username, &user.Password, &user.IsActive, &user.City, &user.DwellingAge, &user.Tag, &notification)
+	json.Unmarshal(notification, &user.Notification)
 	return &user, err
 }
 
 func (r *MySQLUserRepository) FindAdminByUsernamePassword(username, password string) (*models.Admin, error) {
 	var admin models.Admin
-	query := "SELECT id, username, password FROM admins WHERE username = ? AND password = ?"
+	query := "SELECT id, username, password FROM users WHERE username = ? AND password = ?"
 	err := r.DB.QueryRow(query, username, password).Scan(&admin.User.UId, &admin.User.Username, &admin.User.Password)
 	return &admin, err
 }
@@ -60,41 +68,58 @@ func (r *MySQLUserRepository) GetAllUsers() ([]*models.User, error) {
 	defer rows.Close()
 
 	var users []*models.User
-	//for rows.Next() {
-	//	var user models.User
-	//	if err := rows.Scan(&user.UId, &user.Username, &user.Password, &user.IsActive, &user.City, &user.DwellingAge, &user.Tag, &user.Notification); err != nil {
-	//		return nil, err
-	//	}
-	//	users = append(users, &user)
-	//}
-	err = sqlx.StructScan(rows, &users)
-	if err != nil {
-		return nil, err
+	for rows.Next() {
+		var user models.User
+		var notification []byte
+		if err := rows.Scan(&user.UId, &user.Username, &user.Password, &user.IsActive, &user.City, &user.DwellingAge, &user.Tag, &notification); err != nil {
+			return nil, err
+		}
+		json.Unmarshal(notification, &user.Notification)
+		users = append(users, &user)
 	}
 	return users, nil
 }
 
-func (r *MySQLUserRepository) DeleteByUId(UId string) error {
+func (r *MySQLUserRepository) DeleteByUId(UId int) error {
 	query := "DELETE FROM users WHERE id = ?"
-	_, err := r.DB.Exec(query, UId)
+	result, err := r.DB.Exec(query, UId)
+	if result != nil {
+		affectedRows, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+		if affectedRows == 0 {
+			return errors.New(constants.Red + "No user exist with this id" + constants.Reset)
+		}
+	}
 	return err
 }
 
-func (r *MySQLUserRepository) UpdateActiveStatus(UId string, status bool) error {
+func (r *MySQLUserRepository) UpdateActiveStatus(UId int, status bool) error {
 	query := "UPDATE users SET is_active = ? WHERE id = ?"
-	_, err := r.DB.Exec(query, status, UId)
+	result, err := r.DB.Exec(query, status, UId)
+	if result != nil {
+		affectedRows, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+		if affectedRows == 0 {
+			return errors.New(constants.Red + "No user exist with this id" + constants.Reset)
+		}
+	}
 	return err
 }
 
-func (r *MySQLUserRepository) PushNotification(UId string, title string) error {
-	query := "UPDATE users SET notification = CONCAT(COALESCE(notification, ''), ?) WHERE id != ?"
+func (r *MySQLUserRepository) PushNotification(UId int, title string) error {
+	//query := "UPDATE users SET notification = CONCAT(COALESCE(notification, ''), ?) WHERE id != ?"
+	query := "UPDATE users SET notification= JSON_ARRAY_APPEND(notification, '$' ,?) WHERE id != ?"
 	notification := "New post: " + title + "\n"
 	_, err := r.DB.Exec(query, notification, UId)
 	return err
 }
 
-func (r *MySQLUserRepository) ClearNotification(UId string) error {
-	query := "UPDATE users SET notification = '' WHERE id = ?"
+func (r *MySQLUserRepository) ClearNotification(UId int) error {
+	query := "UPDATE users SET notification = '[]' WHERE id = ?"
 	_, err := r.DB.Exec(query, UId)
 	return err
 }

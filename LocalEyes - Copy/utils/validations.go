@@ -1,15 +1,18 @@
 package utils
 
 import (
+	"database/sql"
 	"errors"
-	"go.mongodb.org/mongo-driver/mongo"
 	"localEyes/internal/interfaces"
 	"strings"
 )
 
 func ValidateUsername(username string, userRepo interfaces.UserRepository) bool {
+	if username == "admin" || username == "Admin" {
+		return false
+	}
 	_, err := userRepo.FindByUsername(username)
-	if errors.Is(err, mongo.ErrNoDocuments) {
+	if errors.Is(err, sql.ErrNoRows) {
 		return true
 	}
 	return false

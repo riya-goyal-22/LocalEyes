@@ -5,6 +5,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/manifoldco/promptui"
 	"localEyes/constants"
 	"localEyes/internal/services"
 	"localEyes/utils"
@@ -15,7 +16,12 @@ func adminLogin(adminService *services.AdminService) {
 	fmt.Println("ADMIN LOGIN")
 	fmt.Println("=============================" + constants.Reset)
 	//username := utils.PromptInput("Enter your username:")
-	password := utils.PromptPassword("Enter your password:")
+	prompt := &promptui.Prompt{
+		Label:     constants.Cyan + "Enter your password" + constants.Reset,
+		Mask:      '*',
+		IsConfirm: false,
+	}
+	password := utils.PromptPassword(prompt)
 	_, err := adminService.Login(password)
 	if err != nil {
 		fmt.Println(err)
@@ -38,43 +44,49 @@ func adminLogin(adminService *services.AdminService) {
 			users, err := adminService.GetAllUsers()
 			if err != nil {
 				fmt.Println(err)
+			} else {
+				displayUsers(users)
 			}
-			displayUsers(users)
 		case 2:
 			questions, err := adminService.GetAllQuestions()
 			if err != nil {
 				fmt.Println(err)
+			} else {
+				displayQuestions(questions)
 			}
-			displayQuestions(questions)
 		case 3:
 			posts, err := adminService.GetAllPosts()
 			if err != nil {
 				fmt.Println(err)
+			} else {
+				displayPosts(posts)
 			}
-			displayPosts(posts)
 		case 4:
-			UId, err := utils.PromptID("Enter User Id to delete user:")
+			UId, err := utils.PromptIntInput("Enter User Id to delete user:")
 			err = adminService.DeleteUser(UId)
 			if err != nil {
 				fmt.Println(constants.Red + "Error deleting user:" + err.Error() + constants.Reset)
+			} else {
+				fmt.Println(constants.Green + "User deleted" + constants.Reset)
 			}
-			fmt.Println(constants.Green + "User deleted" + constants.Reset)
 		case 5:
-			QId, err := utils.PromptID("Enter Question Id to delete question:")
+			QId, err := utils.PromptIntInput("Enter Question Id to delete question:")
 			err = adminService.DeleteQuestion(QId)
 			if err != nil {
 				fmt.Println(constants.Red + "Error deleting question:" + err.Error() + constants.Reset)
+			} else {
+				fmt.Println(constants.Green + "Question deleted" + constants.Reset)
 			}
-			fmt.Println(constants.Green + "Question deleted" + constants.Reset)
 		case 6:
-			PId, err := utils.PromptID("Enter Post Id to delete post:")
+			PId, err := utils.PromptIntInput("Enter Post Id to delete post:")
 			err = adminService.DeletePost(PId)
 			if err != nil {
 				fmt.Println(constants.Red + "Error deleting post:" + err.Error() + constants.Reset)
+			} else {
+				fmt.Println(constants.Green + "Post deleted" + constants.Reset)
 			}
-			fmt.Println(constants.Green + "Post deleted" + constants.Reset)
 		case 7:
-			UId, err := utils.PromptID("Enter User Id to Activate user:")
+			UId, err := utils.PromptIntInput("Enter User Id to Activate user:")
 			err = adminService.ReActivate(UId)
 			if err != nil {
 				fmt.Println(constants.Red + "Error activating user:" + err.Error() + constants.Reset)

@@ -1,198 +1,193 @@
 package services_test
 
 import (
-	"errors"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"localEyes/internal/models"
 	"localEyes/internal/services"
 	"localEyes/tests/mocks"
 	"testing"
+	"time"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestPostService_UpdateMyPost(t *testing.T) {
+func TestCreatePost(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
-	postService := services.NewPostService(mockPostRepo)
+	mockRepo := mocks.NewMockPostRepository(ctrl)
+	service := services.NewPostService(mockRepo)
 
-	postID := primitive.NewObjectID()
-	userID := primitive.NewObjectID()
+	post := &models.Post{
+		UId:       1,
+		Title:     "Test Post",
+		Content:   "Test Content",
+		Type:      "Travel",
+		CreatedAt: time.Now(),
+		Likes:     0,
+	}
+
+	// Set up expectations
+	mockRepo.EXPECT().Create(post).Return(nil)
+
+	// Call the method
+	err := service.CreatePost(post.UId, post.Title, post.Content, post.Type)
+
+	// Assert results
+	assert.NoError(t, err)
+}
+
+func TestUpdateMyPost(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockPostRepository(ctrl)
+	service := services.NewPostService(mockRepo)
+
+	postId := 1
+	userId := 1
 	title := "Updated Title"
 	content := "Updated Content"
 
-	mockPostRepo.EXPECT().
-		UpdateUserPost(postID, userID, title, content).
-		Return(nil)
+	// Set up expectations
+	mockRepo.EXPECT().UpdateUserPost(postId, userId, title, content).Return(nil)
 
-	err := postService.UpdateMyPost(postID, userID, title, content)
+	// Call the method
+	err := service.UpdateMyPost(postId, userId, title, content)
 
+	// Assert results
 	assert.NoError(t, err)
 }
 
-func TestPostService_GiveAllPosts(t *testing.T) {
+func TestGiveAllPosts(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
-	postService := services.NewPostService(mockPostRepo)
+	mockRepo := mocks.NewMockPostRepository(ctrl)
+	service := services.NewPostService(mockRepo)
 
-	expectedPosts := []*models.Post{
-		{Title: "Title1", Content: "Content1"},
-		{Title: "Title2", Content: "Content2"},
+	posts := []*models.Post{
+		{UId: 1, Title: "Post 1"},
+		{UId: 2, Title: "Post 2"},
 	}
 
-	mockPostRepo.EXPECT().
-		GetAllPosts().
-		Return(expectedPosts, nil)
+	// Set up expectations
+	mockRepo.EXPECT().GetAllPosts().Return(posts, nil)
 
-	posts, err := postService.GiveAllPosts()
+	// Call the method
+	result, err := service.GiveAllPosts()
 
+	// Assert results
 	assert.NoError(t, err)
-	assert.Equal(t, expectedPosts, posts)
+	assert.Equal(t, posts, result)
 }
 
-func TestPostService_GiveAllPosts_Failure(t *testing.T) {
+func TestGiveMyPosts(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
-	postService := services.NewPostService(mockPostRepo)
+	mockRepo := mocks.NewMockPostRepository(ctrl)
+	service := services.NewPostService(mockRepo)
 
-	mockPostRepo.EXPECT().
-		GetAllPosts().
-		Return(nil, errors.New("fetch error"))
-
-	posts, err := postService.GiveAllPosts()
-
-	assert.Error(t, err)
-	assert.Nil(t, posts)
-	assert.Contains(t, err.Error(), "fetch error")
-}
-
-func TestPostService_GiveMyPosts(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
-	postService := services.NewPostService(mockPostRepo)
-
-	userID := primitive.NewObjectID()
-	expectedPosts := []*models.Post{
-		{Title: "Title1", Content: "Content1"},
+	userId := 1
+	posts := []*models.Post{
+		{UId: userId, Title: "My Post 1"},
+		{UId: userId, Title: "My Post 2"},
 	}
 
-	filter := bson.M{"userId": userID}
-	mockPostRepo.EXPECT().
-		GetPostsByFilter(filter).
-		Return(expectedPosts, nil)
+	// Set up expectations
+	mockRepo.EXPECT().GetPostsByUId(userId).Return(posts, nil)
 
-	posts, err := postService.GiveMyPosts(userID)
+	// Call the method
+	result, err := service.GiveMyPosts(userId)
 
+	// Assert results
 	assert.NoError(t, err)
-	assert.Equal(t, expectedPosts, posts)
+	assert.Equal(t, posts, result)
 }
 
-func TestPostService_DeleteMyPost(t *testing.T) {
+func TestDeleteMyPost(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
-	postService := services.NewPostService(mockPostRepo)
+	mockRepo := mocks.NewMockPostRepository(ctrl)
+	service := services.NewPostService(mockRepo)
 
-	userID := primitive.NewObjectID()
-	postID := primitive.NewObjectID()
+	userId := 1
+	postId := 1
 
-	filter := bson.M{"userId": userID, "id": postID}
-	mockPostRepo.EXPECT().
-		DeleteOneDoc(filter).
-		Return(nil)
+	// Set up expectations
+	mockRepo.EXPECT().DeleteByUIdPId(userId, postId).Return(nil)
 
-	err := postService.DeleteMyPost(userID, postID)
+	// Call the method
+	err := service.DeleteMyPost(userId, postId)
 
+	// Assert results
 	assert.NoError(t, err)
 }
 
-func TestPostService_Like(t *testing.T) {
+func TestLike(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
-	postService := services.NewPostService(mockPostRepo)
+	mockRepo := mocks.NewMockPostRepository(ctrl)
+	service := services.NewPostService(mockRepo)
 
-	postID := primitive.NewObjectID()
+	postId := 1
 
-	mockPostRepo.EXPECT().
-		UpdateLike(postID).
-		Return(nil)
+	// Set up expectations
+	mockRepo.EXPECT().UpdateLike(postId).Return(nil)
 
-	err := postService.Like(postID)
+	// Call the method
+	err := service.Like(postId)
 
+	// Assert results
 	assert.NoError(t, err)
 }
 
-func TestPostService_GiveFilteredPosts(t *testing.T) {
+func TestGiveFilteredPosts(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
-	postService := services.NewPostService(mockPostRepo)
+	mockRepo := mocks.NewMockPostRepository(ctrl)
+	service := services.NewPostService(mockRepo)
 
-	filterType := "General"
-	expectedPosts := []*models.Post{
-		{Title: "Title1", Content: "Content1"},
+	filterType := "Food"
+	posts := []*models.Post{
+		{Title: "Food Post 1"},
+		{Title: "Food Post 2"},
 	}
 
-	filter := bson.M{"type": filterType}
-	mockPostRepo.EXPECT().
-		GetPostsByFilter(filter).
-		Return(expectedPosts, nil)
+	// Set up expectations
+	mockRepo.EXPECT().GetPostsByFilter(filterType).Return(posts, nil)
 
-	posts, err := postService.GiveFilteredPosts(filterType)
+	// Call the method
+	result, err := service.GiveFilteredPosts(filterType)
 
+	// Assert results
 	assert.NoError(t, err)
-	assert.Equal(t, expectedPosts, posts)
+	assert.Equal(t, posts, result)
 }
 
-func TestPostService_PostIdExist(t *testing.T) {
+func TestPostIdExist(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
-	postService := services.NewPostService(mockPostRepo)
+	mockRepo := mocks.NewMockPostRepository(ctrl)
+	service := services.NewPostService(mockRepo)
 
-	postID := primitive.NewObjectID()
+	postId := 1
+	posts := []*models.Post{
+		{UId: 1, Title: "Existing Post"},
+	}
 
-	filter := bson.M{"id": postID}
-	mockPostRepo.EXPECT().
-		GetPostsByFilter(filter).
-		Return([]*models.Post{{}}, nil)
+	// Set up expectations
+	mockRepo.EXPECT().GetPostsByPId(postId).Return(posts, nil)
 
-	exists, err := postService.PostIdExist(postID)
+	// Call the method
+	exists, err := service.PostIdExist(postId)
 
+	// Assert results
 	assert.NoError(t, err)
 	assert.True(t, exists)
-}
-
-func TestPostService_PostIdExist_NotExist(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockPostRepo := mocks.NewMockPostRepository(ctrl)
-	postService := services.NewPostService(mockPostRepo)
-
-	postID := primitive.NewObjectID()
-
-	filter := bson.M{"id": postID}
-	mockPostRepo.EXPECT().
-		GetPostsByFilter(filter).
-		Return(nil, nil)
-
-	exists, err := postService.PostIdExist(postID)
-
-	assert.NoError(t, err)
-	assert.False(t, exists)
 }

@@ -1,10 +1,9 @@
 package utils_test
 
 import (
+	"database/sql"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/mongo"
-	"localEyes/internal/models"
 	"localEyes/tests/mocks"
 	"localEyes/utils"
 	"testing"
@@ -45,21 +44,34 @@ func TestValidateFilter(t *testing.T) {
 	}
 }
 
-func TestValidateUsername(t *testing.T) {
+func TestValidateUsername_UsernameExists(t *testing.T) {
+	// Initialize gomock controller
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	// Create a new MockUserRepository
 	mockRepo := mocks.NewMockUserRepository(ctrl)
 
-	// Case 1: Username not found
-	mockRepo.EXPECT().FindByUsername("nonexistent_user").Return(nil, mongo.ErrNoDocuments)
+	// Simulate FindByUsername returning an existing user (no error)
+	mockRepo.EXPECT().FindByUsername("existinguser").Return(nil, nil)
 
-	isValid := utils.ValidateUsername("nonexistent_user", mockRepo)
-	assert.True(t, isValid, "Expected username to be valid when not found")
+	// Test for existing username in the repository
+	result := utils.ValidateUsername("existinguser", mockRepo)
+	assert.False(t, result, "Existing username should not be valid")
+}
 
-	// Case 2: Username found
-	mockRepo.EXPECT().FindByUsername("existing_user").Return(&models.User{}, nil)
+func TestValidateUsername_UsernameNotFound(t *testing.T) {
+	// Initialize gomock controller
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-	isValid = utils.ValidateUsername("existing_user", mockRepo)
-	assert.False(t, isValid, "Expected username to be invalid when found")
+	// Create a new MockUserRepository
+	mockRepo := mocks.NewMockUserRepository(ctrl)
+
+	// Simulate FindByUsername returning sql.ErrNoRows for non-existing username
+	mockRepo.EXPECT().FindByUsername("newuser").Return(nil, sql.ErrNoRows)
+
+	// Test for valid username when not found in the repository
+	result := utils.ValidateUsername("newuser", mockRepo)
+	assert.True(t, result, "Username not found in the repository should be valid")
 }

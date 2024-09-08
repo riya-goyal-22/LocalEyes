@@ -5,7 +5,7 @@ package cli
 
 import (
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/manifoldco/promptui"
 	"localEyes/constants"
 	"localEyes/internal/services"
 	"localEyes/utils"
@@ -16,15 +16,20 @@ func login(userService *services.UserService, questionService *services.Question
 	fmt.Println("LOGIN")
 	fmt.Println("=============================" + constants.Reset)
 	username := utils.PromptInput("Enter your username:")
-	password := utils.PromptPassword(constants.Cyan + "Enter your password:" + constants.Reset)
-	user, err := userService.Login(username, password)
-	user.NotifyChannel = make(chan string, 5)
-	for _, s := range user.Notification {
-		user.NotifyChannel <- s
+	prompt := &promptui.Prompt{
+		Label:     constants.Cyan + "Enter your password" + constants.Reset,
+		Mask:      '*',
+		IsConfirm: false,
 	}
+	password := utils.PromptPassword(prompt)
+	user, err := userService.Login(username, password)
 	if err != nil {
 		fmt.Println(err)
 		return
+	}
+	user.NotifyChannel = make(chan string, 5)
+	for _, s := range user.Notification {
+		user.NotifyChannel <- s
 	}
 	fmt.Println(constants.Green + "\nUser logged in successfully" + constants.Reset)
 	select {
@@ -67,7 +72,7 @@ func login(userService *services.UserService, questionService *services.Question
 			} else {
 				displayPosts(myPosts)
 			}
-			PId, err := utils.PromptID("Enter post id to update:")
+			PId, err := utils.PromptIntInput("Enter post id to update:")
 			if err != nil {
 				fmt.Println(constants.Red + err.Error() + constants.Reset)
 			}
@@ -105,7 +110,7 @@ func login(userService *services.UserService, questionService *services.Question
 			}
 
 		case 6:
-			PId, err := utils.PromptID("Enter post id to open:")
+			PId, err := utils.PromptIntInput("Enter post id to open:")
 			if err != nil {
 				fmt.Println(constants.Red + err.Error() + constants.Reset)
 				break
@@ -113,7 +118,7 @@ func login(userService *services.UserService, questionService *services.Question
 			openPost(questionService, postService, PId, user.UId)
 
 		case 7:
-			PId, err := utils.PromptID("Enter post id to like:")
+			PId, err := utils.PromptIntInput("Enter post id to like:")
 			err = postService.Like(PId)
 			if err != nil {
 				fmt.Println(constants.Red + "Error liking post:" + err.Error() + constants.Reset)
@@ -128,7 +133,7 @@ func login(userService *services.UserService, questionService *services.Question
 			} else {
 				displayPosts(myPosts)
 			}
-			PId, err := utils.PromptID("Enter post id to delete:")
+			PId, err := utils.PromptIntInput("Enter post id to delete:")
 			if err != nil {
 				fmt.Println(constants.Red + "Error taking postId input:" + err.Error() + constants.Reset)
 			}
@@ -159,7 +164,7 @@ func login(userService *services.UserService, questionService *services.Question
 	}
 }
 
-func postCreate(postService *services.PostService, userService *services.UserService, UId primitive.ObjectID) {
+func postCreate(postService *services.PostService, userService *services.UserService, UId int) {
 	fmt.Println(constants.Blue + "\n1.Create Food post")
 	fmt.Println("2.Create Travel post")
 	fmt.Println("3.Create Shopping post")

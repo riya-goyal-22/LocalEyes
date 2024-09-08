@@ -1,98 +1,87 @@
 package utils_test
 
 import (
-	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"fmt"
+	"github.com/golang/mock/gomock"
+	"localEyes/tests/mocks"
 	"localEyes/utils"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPromptInput(t *testing.T) {
-	expectedInput := "test input"
-	// Mocking stdin
+	// Simulate user input by redirecting os.Stdin
+	input := "test input"
 	r, w, _ := os.Pipe()
-	os.Stdin = r
-
-	// Simulate user input
-	w.WriteString(expectedInput + "\n")
+	_, _ = w.Write([]byte(input + "\n"))
 	w.Close()
 
-	// Call the function
-	input := utils.PromptInput("Enter something: ")
-
-	// Verify the output
-	assert.Equal(t, expectedInput, input)
+	// Backup the real os.Stdin and restore it after the test
+	oldStdin := os.Stdin
+	defer func() { os.Stdin = oldStdin }()
+	os.Stdin = r
+	fmt.Println("entered prompt input")
+	// Call the function to test
+	result := utils.PromptInput("Enter input: ")
+	fmt.Println("exit prompt input")
+	// Check the result
+	assert.Equal(t, input, result)
 }
 
 func TestGetChoice(t *testing.T) {
-	expectedChoice := "2"
-	// Mocking stdin
+	// Simulate user input for the choice
+	input := "3"
 	r, w, _ := os.Pipe()
-	os.Stdin = r
-
-	// Simulate user input
-	w.WriteString(expectedChoice + "\n")
+	_, _ = w.Write([]byte(input + "\n"))
 	w.Close()
 
-	// Call the function
-	choice := utils.GetChoice()
-
-	// Verify the output
-	assert.Equal(t, 2, choice)
-}
-
-func TestPromptID(t *testing.T) {
-	// Ensure the test is being run
-	t.Log("Running TestPromptID...")
-
-	validID := primitive.NewObjectID().Hex()
-
-	// Mocking stdin
-	r, w, _ := os.Pipe()
-	defer func() {
-		_ = w.Close()
-		_ = r.Close()
-	}()
+	oldStdin := os.Stdin
+	defer func() { os.Stdin = oldStdin }()
 	os.Stdin = r
 
-	// Simulate user input
-	_, _ = w.WriteString(validID + "\n")
+	result := utils.GetChoice()
 
-	// Call the function
-	id, err := utils.PromptID("Enter ID: ")
+	assert.Equal(t, 3, result)
+}
 
-	// Verify the output
+func TestPromptIntInput_ValidInput(t *testing.T) {
+	// Simulate valid user input by redirecting os.Stdin
+	input := "42"
+	r, w, _ := os.Pipe()
+	_, _ = w.Write([]byte(input + "\n"))
+	w.Close()
+
+	// Backup the real os.Stdin and restore it after the test
+	oldStdin := os.Stdin
+	defer func() { os.Stdin = oldStdin }()
+	os.Stdin = r
+	fmt.Println("entered prompt input")
+	// Call the function to test
+	result, err := utils.PromptIntInput("Enter a number: ")
+	fmt.Println("exited prompt input")
+	// Check the result
+	expected := 42
 	assert.NoError(t, err)
-	assert.Equal(t, validID, id.Hex())
-
-	// Ensure the test completed
-	t.Log("TestPromptID completed.")
+	assert.Equal(t, expected, result)
 }
 
-func TestPromptID_Invalid(t *testing.T) {
-	invalidID := "invalidID"
+func TestPromptPassword(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-	// Debug: Ensure this is running
-	t.Log("Running TestPromptID_Invalid...")
+	// Create a mock instance
+	mockPrompt := mocks.NewMockPromptInterface(ctrl)
 
-	r, w, _ := os.Pipe()
-	defer func() {
-		_ = r.Close()
-		_ = w.Close()
-	}()
-	os.Stdin = r
+	// Set up expectations
+	mockPrompt.EXPECT().Run().Return("testpassword", nil)
 
-	_, _ = w.WriteString(invalidID + "\n")
-	_ = w.Close()
+	// Call the function under test
+	result := utils.PromptPassword(mockPrompt)
 
-	id, err := utils.PromptID("Enter ID: ")
-
-	// Debug: Check the values of err and id
-	t.Logf("err: %v, id: %v", err, id)
-
-	// Verify the output
-	assert.Error(t, err, "Expected an error for invalid ObjectID")
-	assert.Equal(t, primitive.NilObjectID, id, "Expected a NilObjectID for invalid input")
-
+	// Assert the results
+	if result != "testpassword" {
+		t.Errorf("expected testpassword, got %s", result)
+	}
 }

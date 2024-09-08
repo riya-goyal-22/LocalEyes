@@ -1,8 +1,6 @@
 package services
 
 import (
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"localEyes/internal/interfaces"
 	"localEyes/internal/models"
 	"time"
@@ -16,10 +14,9 @@ func NewPostService(repo interfaces.PostRepository) *PostService {
 	return &PostService{repo: repo}
 }
 
-func (s *PostService) CreatePost(userId primitive.ObjectID, title, content, postType string) error {
+func (s *PostService) CreatePost(userId int, title, content, postType string) error {
 	post := &models.Post{
 		UId:       userId,
-		PostId:    primitive.NewObjectID(),
 		Title:     title,
 		Content:   content,
 		Type:      postType,
@@ -30,7 +27,7 @@ func (s *PostService) CreatePost(userId primitive.ObjectID, title, content, post
 	return err
 }
 
-func (s *PostService) UpdateMyPost(postId, userId primitive.ObjectID, title, content string) error {
+func (s *PostService) UpdateMyPost(postId, userId int, title, content string) error {
 	err := s.repo.UpdateUserPost(postId, userId, title, content)
 	if err != nil {
 		return err
@@ -46,24 +43,23 @@ func (s *PostService) GiveAllPosts() ([]*models.Post, error) {
 	return posts, nil
 }
 
-func (s *PostService) GiveMyPosts(UId primitive.ObjectID) ([]*models.Post, error) {
-	filter := bson.M{"userId": UId}
-	posts, err := s.repo.GetPostsByFilter(filter)
+func (s *PostService) GiveMyPosts(UId int) ([]*models.Post, error) {
+	posts, err := s.repo.GetPostsByUId(UId)
 	if err != nil {
 		return nil, err
 	}
 	return posts, nil
 }
 
-func (s *PostService) DeleteMyPost(UId, PId primitive.ObjectID) error {
-	err := s.repo.DeleteOneDoc(bson.M{"userId": UId, "id": PId})
+func (s *PostService) DeleteMyPost(UId, PId int) error {
+	err := s.repo.DeleteByUIdPId(UId, PId)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *PostService) Like(PId primitive.ObjectID) error {
+func (s *PostService) Like(PId int) error {
 	err := s.repo.UpdateLike(PId)
 	if err != nil {
 		return err
@@ -72,17 +68,15 @@ func (s *PostService) Like(PId primitive.ObjectID) error {
 }
 
 func (s *PostService) GiveFilteredPosts(filterType string) ([]*models.Post, error) {
-	filter := bson.M{"type": filterType}
-	posts, err := s.repo.GetPostsByFilter(filter)
+	posts, err := s.repo.GetPostsByFilter(filterType)
 	if err != nil {
 		return nil, err
 	}
 	return posts, nil
 }
 
-func (s *PostService) PostIdExist(PId primitive.ObjectID) (bool, error) {
-	filter := bson.M{"id": PId}
-	posts, err := s.repo.GetPostsByFilter(filter)
+func (s *PostService) PostIdExist(PId int) (bool, error) {
+	posts, err := s.repo.GetPostsByPId(PId)
 	if err != nil {
 		return false, err
 	}

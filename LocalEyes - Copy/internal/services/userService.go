@@ -2,9 +2,9 @@ package services
 
 import (
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"errors"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"localEyes/constants"
 	"localEyes/internal/interfaces"
 	"localEyes/internal/models"
@@ -22,7 +22,7 @@ func (s *UserService) Signup(username, password string, dwellingAge int, tag str
 	hashedPassword := HashPassword(password)
 
 	user := &models.User{
-		UId:          primitive.NewObjectID(),
+		//UId:          primitive.NewObjectID(),
 		Username:     username,
 		Password:     hashedPassword,
 		City:         "delhi",
@@ -30,10 +30,7 @@ func (s *UserService) Signup(username, password string, dwellingAge int, tag str
 		IsActive:     true,
 		DwellingAge:  dwellingAge,
 		Tag:          tag,
-		//NotifyChannel: make(chan string, 5),
-		//IsAdmin:       false,
 	}
-
 	err := s.Repo.Create(user)
 	return err
 }
@@ -52,7 +49,7 @@ func (s *UserService) Login(Username, password string) (*models.User, error) {
 	return user, nil
 }
 
-func (s *UserService) DeActivate(UId primitive.ObjectID) error {
+func (s *UserService) DeActivate(UId int) error {
 	err := s.Repo.UpdateActiveStatus(UId, false)
 	if err != nil {
 		return err
@@ -66,10 +63,14 @@ func HashPassword(password string) string {
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-func (s *UserService) NotifyUsers(UId primitive.ObjectID, title string) error {
+func (s *UserService) NotifyUsers(UId int, title string) error {
 	return s.Repo.PushNotification(UId, title)
 }
 
-func (s *UserService) UnNotifyUsers(UId primitive.ObjectID) error {
-	return s.Repo.ClearNotification(UId)
+func (s *UserService) UnNotifyUsers(UId int) error {
+	err := s.Repo.ClearNotification(UId)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	return err
 }

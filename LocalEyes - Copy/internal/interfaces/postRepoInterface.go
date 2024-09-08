@@ -1,16 +1,18 @@
 package interfaces
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"localEyes/internal/models"
 )
 
 type PostRepository interface {
 	Create(post *models.Post) error
 	GetAllPosts() ([]*models.Post, error)
-	DeleteOneDoc(filter interface{}) error
-	DeleteByUId(UId primitive.ObjectID) error
-	GetPostsByFilter(filter interface{}) ([]*models.Post, error)
-	UpdateUserPost(PId primitive.ObjectID, UId primitive.ObjectID, title string, content string) error
-	UpdateLike(PId primitive.ObjectID) error
+	DeleteByPId(PId int) error
+	DeleteByUId(UId int) error
+	GetPostsByFilter(filter string) ([]*models.Post, error)
+	GetPostsByUId(UId int) ([]*models.Post, error)
+	UpdateUserPost(PId int, UId int, title string, content string) error
+	UpdateLike(PId int) error
+	DeleteByUIdPId(UId, PId int) error
+	GetPostsByPId(PId int) ([]*models.Post, error)
 }
